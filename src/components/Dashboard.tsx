@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { avatarColor, initials } from "@/lib/avatar";
 
 type Owner = { id: string; name: string; email: string };
 type DocSummary = {
@@ -95,51 +96,60 @@ export default function Dashboard({
     refresh();
   }
 
+  const firstName = currentUser.name.split(" ")[0];
+
   return (
     <>
-      <p style={{ color: "var(--text-muted)", fontSize: 14 }}>
-        Signed in as <strong>{currentUser.name}</strong> ({currentUser.email})
-      </p>
+      <div className="page-heading">
+        <div>
+          <h1>Welcome back, {firstName}</h1>
+          <div className="subtitle">{currentUser.email}</div>
+        </div>
+      </div>
 
-      {error && <div className="error-banner">{error}</div>}
+      {error && (
+        <div className="error-banner">
+          <AlertIcon /> {error}
+        </div>
+      )}
 
       <div className="toolbar-row">
         <button className="btn btn-primary" onClick={createDocument} disabled={creating}>
-          {creating ? "Creating…" : "+ New document"}
+          <PlusIcon /> {creating ? "Creating…" : "New document"}
         </button>
 
-        <label className="file-input-label">
-          {uploading ? "Uploading…" : "Import a file"}
+        <label className={`btn upload-btn ${uploading ? "btn-disabled" : ""}`} aria-disabled={uploading}>
+          <UploadIcon /> {uploading ? "Uploading…" : "Import a file"}
           <input
             ref={fileInputRef}
             type="file"
             accept=".txt,.md"
             onChange={handleUpload}
             disabled={uploading}
-            style={{ display: "block", marginTop: 4 }}
+            aria-label="Import a .txt or .md file"
           />
         </label>
       </div>
-      <p className="upload-note">Supported formats: .txt and .md (1MB max). The file becomes a new document.</p>
+      <p className="upload-note">Supports .txt and .md (1MB max) — the file becomes a new document.</p>
 
       <h2 className="section-title">Your documents</h2>
       {owned.length === 0 ? (
-        <p className="empty-state">No documents yet. Create one above.</p>
+        <EmptyState message="No documents yet. Create one above to get started." />
       ) : (
-        <div className="doc-list">
+        <div className="doc-grid">
           {owned.map((doc) => (
-            <DocRow key={doc.id} doc={doc} onDelete={() => deleteDocument(doc.id)} />
+            <DocCard key={doc.id} doc={doc} onDelete={() => deleteDocument(doc.id)} />
           ))}
         </div>
       )}
 
       <h2 className="section-title">Shared with you</h2>
       {shared.length === 0 ? (
-        <p className="empty-state">Nothing has been shared with you yet.</p>
+        <EmptyState message="Nothing has been shared with you yet." />
       ) : (
-        <div className="doc-list">
+        <div className="doc-grid">
           {shared.map((doc) => (
-            <DocRow key={doc.id} doc={doc} sharedByOwner />
+            <DocCard key={doc.id} doc={doc} sharedByOwner />
           ))}
         </div>
       )}
@@ -147,7 +157,18 @@ export default function Dashboard({
   );
 }
 
-function DocRow({
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="empty-state">
+      <span className="empty-state-icon">
+        <DocIcon />
+      </span>
+      {message}
+    </div>
+  );
+}
+
+function DocCard({
   doc,
   sharedByOwner,
   onDelete,
@@ -157,34 +178,61 @@ function DocRow({
   onDelete?: () => void;
 }) {
   return (
-    <div className="doc-row">
-      <Link href={`/doc/${doc.id}`} style={{ flex: 1, textDecoration: "none" }}>
-        <div style={{ fontWeight: 600 }}>{doc.title}</div>
-        <div className="meta">
-          Updated <FormattedDate value={doc.updatedAt} />
-          {sharedByOwner && doc.owner ? ` · shared by ${doc.owner.name}` : ""}
-          {!sharedByOwner && doc.shares.length > 0
-            ? ` · shared with ${doc.shares.map((s) => s.user.name).join(", ")}`
-            : ""}
-        </div>
-      </Link>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span className={`badge ${sharedByOwner ? "badge-shared" : ""}`}>
-          {sharedByOwner ? "Shared" : "Owned"}
-        </span>
-        {onDelete && (
+    <Link href={`/doc/${doc.id}`} className="doc-card">
+      {onDelete && (
+        <div className="doc-card-actions">
           <button
-            className="btn btn-danger"
+            className="btn btn-danger btn-icon"
+            title="Delete document"
             onClick={(e) => {
               e.preventDefault();
               onDelete();
             }}
           >
-            Delete
+            <TrashIcon />
           </button>
-        )}
+        </div>
+      )}
+
+      <span className={`doc-card-icon ${sharedByOwner ? "is-shared" : ""}`}>
+        <DocIcon />
+      </span>
+
+      <div>
+        <div className="doc-card-title">{doc.title}</div>
+        <div className="doc-card-meta">
+          Updated <FormattedDate value={doc.updatedAt} />
+        </div>
       </div>
-    </div>
+
+      <div className="doc-card-footer">
+        <span className={`badge ${sharedByOwner ? "badge-shared" : ""}`}>
+          {sharedByOwner ? "Shared" : "Owned"}
+        </span>
+        {sharedByOwner && doc.owner ? (
+          <span
+            className="avatar avatar-sm"
+            style={{ background: avatarColor(doc.owner.name) }}
+            title={`Shared by ${doc.owner.name}`}
+          >
+            {initials(doc.owner.name)}
+          </span>
+        ) : doc.shares.length > 0 ? (
+          <div style={{ display: "flex", marginLeft: -4 }}>
+            {doc.shares.slice(0, 3).map((s) => (
+              <span
+                key={s.user.id}
+                className="avatar avatar-sm"
+                style={{ background: avatarColor(s.user.name), marginLeft: -4, border: "2px solid var(--surface)" }}
+                title={s.user.name}
+              >
+                {initials(s.user.name)}
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </Link>
   );
 }
 
@@ -213,4 +261,47 @@ function FormattedDate({ value }: { value: string }) {
   }, [value]);
 
   return <span suppressHydrationWarning>{formatted ?? "…"}</span>;
+}
+
+function PlusIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+      <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function UploadIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+      <path d="M12 16V4M7 9l5-5 5 5M4 20h16" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function DocIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" strokeLinejoin="round" />
+      <path d="M14 2v6h6" strokeLinejoin="round" />
+      <path d="M9 13h6M9 17h6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function AlertIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v5M12 16h.01" strokeLinecap="round" />
+    </svg>
+  );
 }

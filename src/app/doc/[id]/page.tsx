@@ -36,6 +36,10 @@ export default async function DocumentPage({ params }: { params: { id: string } 
   return (
     <main className="container">
       <EditorPage
+        // Same reasoning as the dashboard: remount on user switch so
+        // isOwner/title/share state doesn't get stuck from whoever was
+        // signed in before.
+        key={user.id}
         documentId={document.id}
         initialTitle={document.title}
         initialContent={document.content}

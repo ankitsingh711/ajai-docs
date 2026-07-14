@@ -22,6 +22,12 @@ export default async function HomePage() {
   return (
     <main className="container">
       <Dashboard
+        // Keyed on the signed-in user so switching users (via UserSwitcher +
+        // router.refresh()) remounts this component instead of reusing the
+        // old instance. Without this, useState(initialOwned) below would
+        // keep the previous user's document list, since React only reads a
+        // useState initializer on mount, not on every prop update.
+        key={user.id}
         currentUser={{ id: user.id, name: user.name, email: user.email }}
         initialOwned={JSON.parse(JSON.stringify(owned))}
         initialShared={JSON.parse(JSON.stringify(shared))}

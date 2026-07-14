@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Editor from "@/components/Editor";
+import { avatarColor, initials } from "@/lib/avatar";
 
 type Owner = { id: string; name: string; email: string };
 type ShareEntry = { userId: string; name: string; email: string };
@@ -108,10 +109,23 @@ export default function EditorPage({
     };
   }, []);
 
+  const statusClass =
+    status === "saving" ? "is-saving" : status === "saved" ? "is-saved" : status === "error" ? "is-error" : "";
+  const statusLabel =
+    status === "saving"
+      ? "Saving…"
+      : status === "saved"
+      ? "Saved"
+      : status === "error"
+      ? "Save failed"
+      : !isOwner
+      ? "Shared access"
+      : "";
+
   return (
     <>
-      <Link href="/" style={{ fontSize: 13, color: "var(--text-muted)", textDecoration: "none" }}>
-        ← All documents
+      <Link href="/" className="back-link">
+        <ArrowLeftIcon /> All documents
       </Link>
 
       <div className="editor-page-header">
@@ -121,32 +135,38 @@ export default function EditorPage({
           disabled={!isOwner}
           onChange={(e) => handleTitleChange(e.target.value)}
           aria-label="Document title"
+          placeholder="Untitled document"
         />
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span className="save-status">
-            {status === "saving" && "Saving…"}
-            {status === "saved" && "Saved"}
-            {status === "error" && "Save failed"}
-            {status === "idle" && !isOwner && "Read-write shared access"}
-          </span>
+        <div className="header-actions">
+          {statusLabel && (
+            <span className={`save-status ${statusClass}`}>
+              <span className="save-dot" />
+              {statusLabel}
+            </span>
+          )}
           {isOwner && (
             <button className="btn" onClick={() => setShowShare((s) => !s)}>
-              Share
+              <ShareIcon /> Share
             </button>
           )}
         </div>
       </div>
 
-      <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "0 0 8px" }}>
+      <p className="owner-line">
         Owned by {owner.name} ({owner.email})
         {!isOwner && " · you have shared access to this document"}
       </p>
 
-      {error && <div className="error-banner">{error}</div>}
+      {error && (
+        <div className="error-banner">
+          <AlertIcon /> {error}
+        </div>
+      )}
 
       {isOwner && showShare && (
         <div className="share-panel">
           <h3>Share this document</h3>
+          <p className="share-subtitle">Anyone you add can view and edit this document.</p>
           <form className="share-form" onSubmit={handleShare}>
             <input
               type="email"
@@ -159,12 +179,19 @@ export default function EditorPage({
               Grant access
             </button>
           </form>
-          {shareError && <div className="error-banner">{shareError}</div>}
+          {shareError && (
+            <div className="error-banner">
+              <AlertIcon /> {shareError}
+            </div>
+          )}
           <ul className="share-list">
             {shares.length === 0 && <li>No one else has access yet.</li>}
             {shares.map((s) => (
               <li key={s.userId}>
-                <span>
+                <span className="share-user">
+                  <span className="avatar avatar-sm" style={{ background: avatarColor(s.name) }}>
+                    {initials(s.name)}
+                  </span>
                   {s.name} ({s.email})
                 </span>
                 <button onClick={() => revokeShare(s.userId)}>Revoke</button>
@@ -185,4 +212,32 @@ function safeParse(raw: string) {
   } catch {
     return { type: "doc", content: [{ type: "paragraph" }] };
   }
+}
+
+function ArrowLeftIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3">
+      <path d="M19 12H5M11 6l-6 6 6 6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ShareIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <path d="M8.6 10.6l6.8-3.2M8.6 13.4l6.8 3.2" />
+    </svg>
+  );
+}
+
+function AlertIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v5M12 16h.01" strokeLinecap="round" />
+    </svg>
+  );
 }
