@@ -2,17 +2,23 @@
 
 ## Included in this folder
 
-- `/` — full source code (Next.js app, Prisma schema, tests)
+- `ajaia-docs-final-source.zip` — full source code (Next.js app, Prisma schema, tests)
+- Source is also browsable with full commit history on GitHub: https://github.com/ankitsingh711/ajai-docs
 - `README.md` — local setup and run instructions
 - `ARCHITECTURE.md` — architecture note and scope-cut rationale
 - `AI_WORKFLOW.md` — AI usage disclosure
 - `SUBMISSION.md` — this file
 - `walkthrough-video-url.txt` — link to the recorded walkthrough
-- (add screenshots/demo GIF here if the live deploy needs any manual step to view, e.g. `screenshots/`)
 
 ## Live product URL
 
-`TODO — add after deploying to Vercel`
+https://ajai-docs-seven.vercel.app
+
+## Google Drive folder
+
+https://drive.google.com/drive/folders/1T2s_5Tn2nm17iNOUgalH0LRqt_DYDJJk
+
+(Contains this file, README.md, ARCHITECTURE.md, AI_WORKFLOW.md, walkthrough-video-url.txt, and the full source code zip.)
 
 ## Test accounts
 
@@ -48,4 +54,4 @@ See `ARCHITECTURE.md` → "What I'd build next with 2–4 more hours" for priori
 
 ## Video walkthrough
 
-`TODO — add Loom/YouTube link, also duplicated in walkthrough-video-url.txt`
+https://www.loom.com/share/bb7d8a36c1db4e6a8f62abc94081cd26

@@ -75,7 +75,7 @@ Deployed via Vercel (frontend + API routes) with a Supabase Postgres database. S
 4. Deploy. Vercel runs `prisma generate && next build` automatically (see `package.json`).
 5. Run `npx prisma db push` and `npm run seed` once against the production database (locally, pointed at the prod `DATABASE_URL`, or via Vercel's CLI) so the live app has seeded users.
 
-Live URL: _see `SUBMISSION.md`_
+Live URL: https://ajai-docs-seven.vercel.app
 
 ## Known limitations
 
