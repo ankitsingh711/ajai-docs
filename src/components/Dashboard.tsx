@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -161,7 +161,7 @@ function DocRow({
       <Link href={`/doc/${doc.id}`} style={{ flex: 1, textDecoration: "none" }}>
         <div style={{ fontWeight: 600 }}>{doc.title}</div>
         <div className="meta">
-          Updated {new Date(doc.updatedAt).toLocaleString()}
+          Updated <FormattedDate value={doc.updatedAt} />
           {sharedByOwner && doc.owner ? ` · shared by ${doc.owner.name}` : ""}
           {!sharedByOwner && doc.shares.length > 0
             ? ` · shared with ${doc.shares.map((s) => s.user.name).join(", ")}`
@@ -186,4 +186,31 @@ function DocRow({
       </div>
     </div>
   );
+}
+
+/**
+ * Renders a locale-formatted date, but only after mounting on the client.
+ *
+ * `toLocaleString()` formats using the runtime's locale/timezone. The
+ * Next.js server that renders the initial HTML and the user's browser can
+ * disagree on both (e.g. server defaults to en-US/UTC, browser is
+ * en-GB/IST), so formatting the date during SSR produces text that doesn't
+ * match what the client renders on hydration — a hydration mismatch. This
+ * component sidesteps it by rendering a static placeholder on the server
+ * and filling in the real formatted date in an effect, which runs only on
+ * the client after hydration has already succeeded.
+ */
+function FormattedDate({ value }: { value: string }) {
+  const [formatted, setFormatted] = useState<string | null>(null);
+
+  useEffect(() => {
+    setFormatted(
+      new Date(value).toLocaleString(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })
+    );
+  }, [value]);
+
+  return <span suppressHydrationWarning>{formatted ?? "…"}</span>;
 }
